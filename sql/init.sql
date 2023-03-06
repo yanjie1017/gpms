@@ -1,0 +1,43 @@
+DROP TABLE IF EXISTS client, passwordentry, siteinfo, clientapikey;
+
+CREATE TABLE client (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_number VARCHAR(50),
+    email_address VARCHAR(100) NOT NULL,
+    mailing_address VARCHAR(500),
+    postal_code VARCHAR(50),
+    country VARCHAR(100),
+    is_active BOOLEAN NOT NULL, 
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE siteinfo (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    type VARCHAR(100),
+    metadata TEXT NOT NULL,
+    username VARCHAR(100),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE passwordentry (
+    id SERIAL PRIMARY KEY,
+    reference_id VARCHAR(200) NOT NULL,
+    client_id BIGINT REFERENCES client(id) NOT NULL,
+    site_id BIGINT REFERENCES siteinfo(id) UNIQUE NOT NULL,
+    length INTEGER NOT NULL,
+    -- is_active BOOLEAN,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE clientapikey (
+    client_id BIGINT PRIMARY KEY REFERENCES client(id),
+    api_key VARCHAR(200) UNIQUE NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
