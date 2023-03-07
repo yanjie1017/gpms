@@ -9,6 +9,7 @@ import (
 	models "src/models"
 
 	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -24,28 +25,46 @@ type DBConnection struct {
 }
 
 func ConnectDB() DBConnection {
+	contextLogger := log.WithFields(log.Fields{
+		"host":     host,
+		"port":     port,
+		"user":     user,
+		"database": dbname,
+	})
+
+	contextLogger.Info("Connecting to database...")
 	psqlConn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
 
-	// open database
+	// Open DB connection
 	db, err := sql.Open("postgres", psqlConn)
-	CheckError(err)
+	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to open database connection")
+		panic(err)
+	}
 
-	// check db
+	// Check DB connection
 	err = db.Ping()
-	CheckError(err)
+	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to connect to database")
+		panic(err)
+	}
 
-	fmt.Println("DB Connected!")
+	log.Info("Database connected")
 
 	return DBConnection{db}
 }
 
-func CheckError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) (int64, error) {
+	contextLogger := log.WithFields(log.Fields{
+		"client_id":          passwordInfo.Client.Id,
+		"entry_reference_id": passwordInfo.Entry.ReferenceId,
+		"query":              "INSERT_PASSWORD_ENTRY",
+	})
+
 	var id int64 = 0
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -53,6 +72,9 @@ func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) 
 
 	tx, err := conn.DB.BeginTx(ctx, nil)
 	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to execute query")
 		return id, err
 	}
 
@@ -60,6 +82,9 @@ func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) 
 		stmt, err := tx.Prepare(INSERT_PASSWORD_ENTRY)
 
 		if err != nil {
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to execute query")
 			return id, err
 		}
 
@@ -76,6 +101,9 @@ func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) 
 		).Scan(&id)
 
 		if err != nil {
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to execute query")
 			return id, err
 		}
 	}
@@ -83,21 +111,36 @@ func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) 
 		err := tx.Commit()
 
 		if err != nil {
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to execute query")
 			return id, err
 		}
 	}
 
+	contextLogger.Info("Executed query")
 	return id, err
 }
 
 func (conn *DBConnection) RetrievePasswordInfo(entryTag models.PasswordEntryTag) (*models.PasswordGenerationInfo, error) {
+	contextLogger := log.WithFields(log.Fields{
+		"client_id": entryTag.ClientId,
+		"entry_id":  entryTag.EntryId,
+		"query":     "RETRIEVE_PASSWORD_ENTRY",
+	})
+
 	info := &models.PasswordGenerationInfo{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	tx, err := conn.DB.BeginTx(ctx, nil)
-	CheckError(err)
+	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to execute query")
+		return nil, err
+	}
 
 	err = tx.QueryRowContext(
 		ctx,
@@ -110,41 +153,33 @@ func (conn *DBConnection) RetrievePasswordInfo(entryTag models.PasswordEntryTag)
 	)
 
 	if err != nil {
-		fmt.Println(err)
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to execute query")
+		return nil, err
 	}
 
 	return info, err
 }
 
-func (conn *DBConnection) ListTables() (string, error) {
-	var s string
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	tx, err := conn.DB.BeginTx(ctx, nil)
-	CheckError(err)
-
-	x := `select table_name from information_schema.tables where table_schema = 'public'`
-
-	err = tx.QueryRowContext(
-		ctx,
-		x,
-	).Scan(
-		&s,
-	)
-
-	return s, err
-}
-
 func (conn *DBConnection) RetrieveAPIKey(clientId int64) (*models.ClientAuthentication, error) {
+	contextLogger := log.WithFields(log.Fields{
+		"client_id": clientId,
+		"query":     "RETRIEVE_API_KEY",
+	})
+
 	info := &models.ClientAuthentication{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	tx, err := conn.DB.BeginTx(ctx, nil)
-	CheckError(err)
+	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to execute query")
+		return nil, err
+	}
 
 	err = tx.QueryRowContext(
 		ctx,
@@ -154,6 +189,13 @@ func (conn *DBConnection) RetrieveAPIKey(clientId int64) (*models.ClientAuthenti
 		&info.ClientId,
 		&info.APIKey,
 	)
+
+	if err != nil {
+		contextLogger.WithFields(log.Fields{
+			"error": err,
+		}).Error("Unable to execute query")
+		return nil, err
+	}
 
 	return info, err
 }

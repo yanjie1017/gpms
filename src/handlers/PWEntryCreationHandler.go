@@ -2,29 +2,54 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	db "src/databases"
-	models "src/models"
+	model "src/models"
+	util "src/utils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Authenticate handler
 func HandlePasswordEntryCreation(dbConnection db.DBConnection) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var request models.EntryCreationRequest
+		contextLogger := log.WithFields(log.Fields{
+			"endpoint": util.PASSWORD_ENTRY_CREATION_ENDPOINT,
+		})
+
+		w.Header().Set("Content-Type", "application/json")
+
+		var request model.EntryCreationRequest
 		err := json.NewDecoder(r.Body).Decode(&request)
 		if err != nil {
-			fmt.Println(err)
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to decode request")
+			w.WriteHeader(http.StatusBadRequest)
+			// TODO: error response
 		}
 
-		var passwordInfo models.PasswordInfo = request.ToPasswordInfo()
+		var passwordInfo model.PasswordInfo = request.ToPasswordInfo()
 		entryId, err := dbConnection.CreatePasswordEntry(passwordInfo)
 
-		var response = models.EntryCreationResponse{
+		if err != nil {
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error("Unable to create password entry in database")
+			w.WriteHeader(http.StatusBadRequest)
+			// TODO: error response
+		}
+
+		var response = model.EntryCreationResponse{
 			EntryId:          entryId,
 			EntryReferenceId: request.EntryReferenceId,
 		}
+
+		contextLogger.WithFields(log.Fields{
+			"entry_id":           response.EntryId,
+			"entry_reference_id": response.EntryReferenceId,
+		}).Info("Created password entry in database")
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

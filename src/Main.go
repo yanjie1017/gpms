@@ -1,46 +1,41 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
-	// service "src/services"
 	db "src/databases"
 	handler "src/handlers"
+	util "src/utils"
 
-	"github.com/gorilla/mux"
+	mux "github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
-const portNumber = ":8000"
+const port = ":8000"
 
 func main() {
-	fmt.Println("Hello World")
-	// service.GeneratePassword("a", "b", "c", "d", 1)
-	/* Connect to database */
+	util.SetupLogger()
+	log.Info("Initialising application...")
+
+	// Connect to database
 	dbConnection := db.ConnectDB()
 
-	/* Defer closing database connection */
+	// Defer closing database connection
 	defer dbConnection.DB.Close()
 
-	// entryTag := model.PasswordEntryTag{
-	// 	ClientId: 10000,
-	// 	EntryId:  10000,
-	// }
-	// // result, err := dbConnection.ListTables()
-	// result, err := dbConnection.RetrievePasswordInfo(entryTag)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(result.Length)
-
+	// Listen to HTTP requests
+	log.Info("Listening to HTTP requests...")
 	router := mux.NewRouter()
-	router.HandleFunc("/v1/health", handler.HandleHealthCheck).Methods(http.MethodPost)
-	router.HandleFunc("/v1/password/generate", handler.HandlePasswordGeneration(dbConnection)).Methods((http.MethodPost))
-	router.HandleFunc("/v1/entry/create", handler.HandlePasswordEntryCreation(dbConnection)).Methods(http.MethodPost)
+	router.HandleFunc(util.HEALTHCHECK_ENDPOINT, handler.HandleHealthCheck).Methods(http.MethodPost)
+	router.HandleFunc(util.PASSWORD_GENERATION_ENDPOINT, handler.HandlePasswordGeneration(dbConnection)).Methods((http.MethodPost))
+	router.HandleFunc(util.HEALTHCHECK_ENDPOINT, handler.HandlePasswordEntryCreation(dbConnection)).Methods(http.MethodPost)
 
-	err := http.ListenAndServe(portNumber, router)
+	err := http.ListenAndServe(port, router)
 	if err != nil {
-		fmt.Println(err)
+		log.WithFields(log.Fields{
+			"port":  port,
+			"error": err,
+		}).Error("Unable to handle HTTP requests")
+		panic(err)
 	}
-
 }
