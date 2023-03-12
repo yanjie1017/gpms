@@ -13,14 +13,14 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo model.PasswordGenerationInfo, systemKey string) (string, error) {
+func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo model.PasswordGenerationInfo, hashKey string) (string, error) {
 	var siteInfo string = passwordInfo.Metadata
 	var length = int(passwordInfo.Length)
 
 	var generationToken string = request.GenerationToken
 	var userInput = request.UserInput
 
-	salt, err := generateSalt(siteInfo, generationToken, systemKey)
+	salt, err := generateSalt(siteInfo, generationToken, hashKey)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,

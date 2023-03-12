@@ -12,28 +12,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = ""
-	dbname   = "gpms"
-)
-
 type DBConnection struct {
 	DB *sql.DB
 }
 
-func ConnectDB() DBConnection {
+func ConnectDB(config models.DatabaseConfiguration) DBConnection {
 	contextLogger := log.WithFields(log.Fields{
-		"host":     host,
-		"port":     port,
-		"user":     user,
-		"database": dbname,
+		"host":     config.Host,
+		"port":     config.Port,
+		"user":     config.User,
+		"database": config.Name,
 	})
 
 	contextLogger.Info("Connecting to database...")
-	psqlConn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbname)
+	psqlConn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable",
+		config.Host, config.Port, config.User, config.Name)
 
 	// Open DB connection
 	db, err := sql.Open("postgres", psqlConn)

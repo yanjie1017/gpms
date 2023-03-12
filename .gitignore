@@ -2,3 +2,5 @@
 .idea
 .devcontainer
 *.log
+*.env
+rsa*

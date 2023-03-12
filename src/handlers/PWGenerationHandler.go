@@ -12,10 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const systemKey = "buijrfbiurh"
-
-// Authenticate handler
-func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
+func HandlePasswordGeneration(dbConnection db.DBConnection, secretKeys model.SecretKeys) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		contextLogger := log.WithFields(log.Fields{
 			"endpoint": util.PASSWORD_GENERATION_ENDPOINT,
@@ -42,7 +39,7 @@ func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
 			// TODO: error response
 		}
 
-		password, err := service.GeneratePassword(request, *passwordInfo, systemKey)
+		password, err := service.GeneratePassword(request, *passwordInfo, secretKeys.HashKey)
 
 		if err != nil {
 			contextLogger.WithFields(log.Fields{
