@@ -39,7 +39,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc(util.HEALTHCHECK_ENDPOINT, handler.HandleHealthCheck).Methods(http.MethodPost)
 	router.HandleFunc(util.PASSWORD_GENERATION_ENDPOINT, handler.HandlePasswordGeneration(dbConnection, appConfig.SecretKey)).Methods((http.MethodPost))
-	router.HandleFunc(util.PASSWORD_ENTRY_CREATION_ENDPOINT, handler.HandlePasswordEntryCreation(dbConnection)).Methods(http.MethodPost)
+	router.HandleFunc(util.PASSWORD_ENTRY_CREATION_ENDPOINT, handler.HandlePasswordEntryCreation(dbConnection, appConfig.SecretKey)).Methods(http.MethodPost)
 
 	err = http.ListenAndServe(port, router)
 	if err != nil {
