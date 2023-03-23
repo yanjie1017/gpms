@@ -40,8 +40,8 @@ WITH client_info as (
 	FROM client
 	WHERE id = $1 AND is_active = true
 )
-SELECT k.id, k.api_key
+SELECT k.client_id, k.api_key
 FROM clientapikey k
 JOIN client_info AS c
-ON c.id = k.id
+ON c.id = k.client_id
 `
