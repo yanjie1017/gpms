@@ -106,7 +106,7 @@ func (conn *DBConnection) CreatePasswordEntry(passwordInfo models.PasswordInfo) 
 		if err != nil {
 			contextLogger.WithFields(log.Fields{
 				"error": err,
-			}).Error("Unable to execute query")
+			}).Error("Query execution failed")
 			return id, err
 		}
 	}
@@ -148,7 +148,7 @@ func (conn *DBConnection) RetrievePasswordInfo(entryTag models.PasswordEntryTag)
 	if err != nil {
 		contextLogger.WithFields(log.Fields{
 			"error": err,
-		}).Error("Unable to execute query")
+		}).Error("Query execution failed")
 		return nil, err
 	}
 
@@ -186,7 +186,7 @@ func (conn *DBConnection) RetrieveAPIKey(clientId int64) (*models.ClientAuthenti
 	if err != nil {
 		contextLogger.WithFields(log.Fields{
 			"error": err,
-		}).Error("Unable to execute query")
+		}).Error("Query execution failed")
 		return nil, err
 	}
 
