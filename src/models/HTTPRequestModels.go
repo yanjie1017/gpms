@@ -1,5 +1,14 @@
 package models
 
+type GeneralRequest struct {
+	Header string `json:"header"`
+	Body   string `json:"body`
+}
+
+type RequestHeader struct {
+	ClientId int64 `json:"clientId"`
+}
+
 type EntryCreationRequest struct {
 	ClientId         int64  `json:"clientId"`
 	EntryReferenceId string `json:"entryReferenceId"`
