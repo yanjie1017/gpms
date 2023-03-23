@@ -2,7 +2,7 @@ package models
 
 type GeneralResponse struct {
 	Header string `json:"header"`
-	Body   string `json:"body`
+	Body   string `json:"body"`
 }
 
 type ResponseHeader struct {
@@ -19,5 +19,5 @@ type PasswordGenerationResponse struct {
 }
 
 type ErrorResponse struct {
-	Error string `json: message`
+	Message string `json:"message"`
 }

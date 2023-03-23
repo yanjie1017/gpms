@@ -75,7 +75,6 @@ func (h *HandlerHelper) DecryptAndDecodeRequest(r *http.Request) (string, error)
 	return requestBody, nil
 }
 
-// TODO: remove extra args
 func (h *HandlerHelper) EncryptAndSignResponse(body string, isError bool) (string, error) {
 	contextLogger := log.WithFields(log.Fields{
 		"isError": isError,
@@ -124,8 +123,16 @@ func (h *HandlerHelper) EncryptAndSignResponse(body string, isError bool) (strin
 }
 
 func (h *HandlerHelper) ReturnErrorResponse(w http.ResponseWriter, body string) http.ResponseWriter {
+	errorBody := model.ErrorResponse{
+		Message: body,
+	}
 
-	encryptedResponse, err := h.EncryptAndSignResponse(body, true)
+	errorStr, err := json.Marshal(errorBody)
+	if err != nil {
+		log.Error("Unable to encode error message")
+	}
+
+	encryptedResponse, err := h.EncryptAndSignResponse(string(errorStr), true)
 	if err != nil {
 		log.Error("Unable to encrypt error response")
 		encryptedResponse = ""
