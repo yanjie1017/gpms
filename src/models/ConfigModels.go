@@ -16,5 +16,6 @@ type DatabaseConfiguration struct {
 type SecretKeys struct {
 	HashKey      string `mapstructure:"HASH_KEY"`
 	SharedSecret string `mapstructure:"SHARED_SECRET"`
-	RSAKey       string `mapstructure:"RSA_KEY"`
+	SignatureMsg string `mapstructure:"SIGNATURE_MSG"`
+	RSAKeyFile   string `mapstructure:"RSA_KEY_FILE"`
 }
