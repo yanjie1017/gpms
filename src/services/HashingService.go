@@ -13,26 +13,22 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo model.PasswordGenerationInfo, systemKey string) (string, error) {
+func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo model.PasswordGenerationInfo, hashKey string) (string, error) {
 	var siteInfo string = passwordInfo.Metadata
 	var length = int(passwordInfo.Length)
 
 	var generationToken string = request.GenerationToken
 	var userInput = request.UserInput
 
-	salt, err := generateSalt(siteInfo, generationToken, systemKey)
+	salt, err := generateSalt(siteInfo, generationToken, hashKey)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Unable to generate salt")
+		log.Error("Unable to generate salt")
 		return "", err
 	}
 
 	passwordBytes, err := scrypt.Key([]byte(userInput), salt, 16384, 8, 1, 32)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Unable to hash user input")
+		log.Error("Unable to hash user input")
 		return "", err
 	}
 
@@ -40,9 +36,7 @@ func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo mode
 
 	mappedPassword, err := mapPassword(passwordString, length)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Unable to map password")
+		log.Error("Unable to map password")
 		return "", err
 	}
 
@@ -52,8 +46,8 @@ func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo mode
 func generateSalt(siteInfo string, generationToken string, systemKey string) ([]byte, error) {
 	var concatenatedString strings.Builder
 	concatenatedString.WriteString(siteInfo)
-	concatenatedString.WriteString(siteInfo)
-	concatenatedString.WriteString(siteInfo)
+	concatenatedString.WriteString(generationToken)
+	concatenatedString.WriteString(systemKey)
 
 	sha_512 := sha512.New()
 	_, err := sha_512.Write([]byte(concatenatedString.String()))
@@ -88,7 +82,7 @@ func mapPassword(password string, requiredLength int) (string, error) {
 
 	// Define the list of possible characters to include in the output string
 	upper := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	symbol := "~`! @#$%^&*()_-+={[}]|:;<,>.?/"
+	symbol := "~`!@#$%^&*()_-+={[}]|:;<,>.?/"
 
 	// Seed the random number generator with a fixed value to ensure consistent output
 	rand.Seed(int64(seed))

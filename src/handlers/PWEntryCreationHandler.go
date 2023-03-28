@@ -2,57 +2,115 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	db "src/databases"
 	model "src/models"
 	util "src/utils"
 
+	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
 )
 
-// Authenticate handler
-func HandlePasswordEntryCreation(dbConnection db.DBConnection) http.HandlerFunc {
+func HandlePasswordEntryCreation(dbConnection db.DBConnection, jsonValidator *validator.Validate, secretKeys model.SecretKeys) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		contextLogger := log.WithFields(log.Fields{
 			"endpoint": util.PASSWORD_ENTRY_CREATION_ENDPOINT,
 		})
 
-		w.Header().Set("Content-Type", "application/json")
-
-		var request model.EntryCreationRequest
-		err := json.NewDecoder(r.Body).Decode(&request)
-		if err != nil {
-			contextLogger.WithFields(log.Fields{
-				"error": err,
-			}).Error("Unable to decode request")
-			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
+		helper := HandlerHelper{
+			secretKeys:   secretKeys,
+			dbConnection: dbConnection,
 		}
 
-		var passwordInfo model.PasswordInfo = request.ToPasswordInfo()
+		requestBodyString, err := helper.DecryptAndDecodeRequest(r)
+		if err != nil {
+			errorMsg := util.HTTP_ERROR_RESPONSE_PARSE_REQUEST
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error(errorMsg)
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
+		}
+
+		requestBody := model.EntryCreationRequest{}
+		err = json.Unmarshal([]byte(requestBodyString), &requestBody)
+		if err != nil {
+			errorMsg := util.HTTP_ERROR_RESPONSE_PARSE_REQUEST
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error(errorMsg)
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
+		}
+
+		err = jsonValidator.Struct(requestBody)
+		if err != nil {
+			errors := err.(validator.ValidationErrors)
+			errorMsg := util.HTTP_ERROR_RESPONSE_MISSING_FIELD
+			e := errors[0]
+			errorMsg += fmt.Sprintf("%s is %s.", e.Field(), e.Tag())
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
+		}
+
+		if requestBody.Length < 6 {
+			w = helper.ReturnErrorResponse(w, util.HTTP_ERROR_RESPONSE_PASSWORD_LENGTH)
+			return
+		}
+
+		contextLogger = contextLogger.WithFields(log.Fields{
+			"entry_reference_id": requestBody.EntryReferenceId,
+		})
+
+		var passwordInfo model.PasswordInfo = requestBody.ToPasswordInfo()
 		entryId, err := dbConnection.CreatePasswordEntry(passwordInfo)
 
 		if err != nil {
+			errorMsg := util.HTTP_ERROR_RESPONSE_PASSWORD_ENTRY_NOT_CREATED
 			contextLogger.WithFields(log.Fields{
 				"error": err,
-			}).Error("Unable to create password entry in database")
-			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
+			}).Error(errorMsg)
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
 		}
 
-		var response = model.EntryCreationResponse{
+		contextLogger = contextLogger.WithFields(log.Fields{
+			"entry_id": entryId,
+		})
+
+		contextLogger.Info("Successfully created password entry")
+
+		var responseBody = model.EntryCreationResponse{
 			EntryId:          entryId,
-			EntryReferenceId: request.EntryReferenceId,
+			EntryReferenceId: requestBody.EntryReferenceId,
 		}
 
-		contextLogger.WithFields(log.Fields{
-			"entry_id":           response.EntryId,
-			"entry_reference_id": response.EntryReferenceId,
-		}).Info("Created password entry in database")
+		responseBodyStr, err := json.Marshal(responseBody)
+
+		if err != nil {
+			errorMsg := util.HTTP_ERROR_RESPONSE_GENERATE_RESPONSE
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error(errorMsg)
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
+		}
+
+		encryptedResponse, err := helper.EncryptAndSignResponse(string(responseBodyStr), false)
+
+		if err != nil {
+			errorMsg := util.HTTP_ERROR_RESPONSE_GENERATE_RESPONSE
+			contextLogger.WithFields(log.Fields{
+				"error": err,
+			}).Error(errorMsg)
+			w = helper.ReturnErrorResponse(w, errorMsg)
+			return
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(response)
+		w.Write([]byte(encryptedResponse))
 	}
 }

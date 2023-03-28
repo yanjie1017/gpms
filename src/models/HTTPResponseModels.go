@@ -1,5 +1,14 @@
 package models
 
+type GeneralResponse struct {
+	Header string `json:"header"`
+	Body   string `json:"body"`
+}
+
+type ResponseHeader struct {
+	Signature string `json:"signature"`
+}
+
 type EntryCreationResponse struct {
 	EntryId          int64  `json:"entryId"`
 	EntryReferenceId string `json:"entryReferenceId"`
@@ -7,4 +16,8 @@ type EntryCreationResponse struct {
 
 type PasswordGenerationResponse struct {
 	Password string `json:"password"`
+}
+
+type ErrorResponse struct {
+	Message string `json:"message"`
 }

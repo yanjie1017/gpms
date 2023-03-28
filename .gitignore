@@ -2,3 +2,6 @@
 .idea
 .devcontainer
 *.log
+*.env
+rsa*
+*.pem
