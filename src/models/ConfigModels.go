@@ -3,6 +3,7 @@ package models
 type AppConfiguration struct {
 	Database  DatabaseConfiguration
 	SecretKey SecretKeys
+	AWSConfig AWSConfiguration
 }
 
 type DatabaseConfiguration struct {
@@ -18,4 +19,9 @@ type SecretKeys struct {
 	SharedSecret string `mapstructure:"SHARED_SECRET"`
 	SignatureMsg string `mapstructure:"SIGNATURE_MSG"`
 	RSAKeyFile   string `mapstructure:"RSA_KEY_FILE"`
+}
+
+type AWSConfiguration struct {
+	Region   string `mapstructure:"AWS_REGION"`
+	S3Bucket string `mapstructure:"S3_BUCKET"`
 }

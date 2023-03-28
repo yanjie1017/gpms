@@ -1,6 +1,8 @@
 package services
 
 import (
+	"strings"
+
 	model "src/models"
 
 	log "github.com/sirupsen/logrus"
@@ -29,10 +31,30 @@ func InitConfig() (model.AppConfiguration, error) {
 		return model.AppConfiguration{}, err
 	}
 
-	log.Info("Configs loaded")
+	var awsConfig model.AWSConfiguration
+	if err := viper.Unmarshal(&awsConfig); err != nil {
+		log.Error("Unable to parse aws config")
+		return model.AppConfiguration{}, err
+	}
+
+	log.Info("Successfully loaded configs")
+
+	privkey := strings.Split(secretKeys.RSAKeyFile, "/")
+	err := DownloadS3Object(
+		awsConfig.S3Bucket,
+		privkey[len(privkey)-1],
+		secretKeys.RSAKeyFile,
+		awsConfig.Region,
+	)
+
+	if err != nil {
+		log.Error("Unable to download objects from S3")
+		return model.AppConfiguration{}, err
+	}
 
 	return model.AppConfiguration{
 		Database:  dbConfig,
 		SecretKey: secretKeys,
+		AWSConfig: awsConfig,
 	}, nil
 }

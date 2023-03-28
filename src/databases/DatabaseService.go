@@ -25,8 +25,8 @@ func ConnectDB(config models.DatabaseConfiguration) DBConnection {
 	})
 
 	contextLogger.Info("Connecting to database...")
-	psqlConn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable",
-		config.Host, config.Port, config.User, config.Name)
+	psqlConn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		config.Host, config.Port, config.User, config.Password, config.Name)
 
 	// Open DB connection
 	db, err := sql.Open("postgres", psqlConn)
