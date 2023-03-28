@@ -13,7 +13,7 @@ type PasswordEntryTag struct {
 
 type ClientAuthentication struct {
 	ClientId int64
-	APIKey   string //encrypted
+	APIKey   string
 }
 
 type PasswordEntryCreationResult struct {

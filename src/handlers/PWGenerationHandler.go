@@ -14,7 +14,6 @@ import (
 
 const systemKey = "buijrfbiurh"
 
-// Authenticate handler
 func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		contextLogger := log.WithFields(log.Fields{
@@ -28,7 +27,6 @@ func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
 				"error": err,
 			}).Error("Unable to decode request")
 			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
 		}
 
 		var passwordEntry model.PasswordEntryTag = request.ToPasswordEntryTag()
@@ -39,7 +37,6 @@ func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
 				"error": err,
 			}).Error("Unable to retrive password info from database")
 			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
 		}
 
 		password, err := service.GeneratePassword(request, *passwordInfo, systemKey)
@@ -49,7 +46,6 @@ func HandlePasswordGeneration(dbConnection db.DBConnection) http.HandlerFunc {
 				"error": err,
 			}).Error("Unable to generate password")
 			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
 		}
 
 		var response = model.PasswordGenerationResponse{

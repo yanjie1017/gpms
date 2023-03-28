@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Authenticate handler
 func HandlePasswordEntryCreation(dbConnection db.DBConnection) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		contextLogger := log.WithFields(log.Fields{
@@ -27,7 +26,6 @@ func HandlePasswordEntryCreation(dbConnection db.DBConnection) http.HandlerFunc 
 				"error": err,
 			}).Error("Unable to decode request")
 			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
 		}
 
 		var passwordInfo model.PasswordInfo = request.ToPasswordInfo()
@@ -38,7 +36,6 @@ func HandlePasswordEntryCreation(dbConnection db.DBConnection) http.HandlerFunc 
 				"error": err,
 			}).Error("Unable to create password entry in database")
 			w.WriteHeader(http.StatusBadRequest)
-			// TODO: error response
 		}
 
 		var response = model.EntryCreationResponse{
