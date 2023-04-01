@@ -50,7 +50,7 @@ func main() {
 	// Listen to HTTP requests
 	log.Info("Listening to HTTP requests...")
 	router := mux.NewRouter()
-	router.HandleFunc(util.HEALTHCHECK_ENDPOINT, handler.HandleHealthCheck).Methods(http.MethodPost)
+	router.HandleFunc(util.HEALTHCHECK_ENDPOINT, handler.HandleHealthCheck).Methods(http.MethodGet)
 	router.HandleFunc(util.PASSWORD_GENERATION_ENDPOINT, handler.HandlePasswordGeneration(dbConnection, v, appConfig.SecretKey)).Methods((http.MethodPost))
 	router.HandleFunc(util.PASSWORD_ENTRY_CREATION_ENDPOINT, handler.HandlePasswordEntryCreation(dbConnection, v, appConfig.SecretKey)).Methods(http.MethodPost)
 
