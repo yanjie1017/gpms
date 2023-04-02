@@ -52,8 +52,8 @@ func GeneratePassword(request model.PasswordGenerationRequest, passwordInfo mode
 func generateSalt(siteInfo string, generationToken string, systemKey string) ([]byte, error) {
 	var concatenatedString strings.Builder
 	concatenatedString.WriteString(siteInfo)
-	concatenatedString.WriteString(siteInfo)
-	concatenatedString.WriteString(siteInfo)
+	concatenatedString.WriteString(generationToken)
+	concatenatedString.WriteString(systemKey)
 
 	sha_512 := sha512.New()
 	_, err := sha_512.Write([]byte(concatenatedString.String()))
