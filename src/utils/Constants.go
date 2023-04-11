@@ -4,7 +4,7 @@ const HEALTHCHECK_ENDPOINT = "/v1/health"
 const PASSWORD_GENERATION_ENDPOINT = "/v1/password/generate"
 const PASSWORD_ENTRY_CREATION_ENDPOINT = "/v1/entry/create"
 
-const HTTP_ERROR_RESPONSE_PARSE_REQUEST = "Invalid request - Wrong field type"
+const HTTP_ERROR_RESPONSE_PARSE_REQUEST = "Invalid request - Wrong field type/encryption"
 const HTTP_ERROR_RESPONSE_MISSING_FIELD = "Missing field in request - "
 
 const HTTP_ERROR_RESPONSE_GENERATE_RESPONSE = "Unable to generate response"
