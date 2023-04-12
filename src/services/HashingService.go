@@ -88,7 +88,7 @@ func mapPassword(password string, requiredLength int) (string, error) {
 
 	// Define the list of possible characters to include in the output string
 	upper := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	symbol := "~`! @#$%^&*()_-+={[}]|:;<,>.?/"
+	symbol := "~`!@#$%^&*()_-+={[}]|:;<,>.?/"
 
 	// Seed the random number generator with a fixed value to ensure consistent output
 	rand.Seed(int64(seed))
